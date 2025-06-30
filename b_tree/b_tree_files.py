@@ -1,7 +1,7 @@
 import pandas as pd 
 import math 
-import sort_by_variousId
-import load_file
+from sort_data import sort_by_variousId
+from source_data import load_file
 
 class Node:
     # t : minimumm dgeree, t-1 key for each node 
@@ -49,7 +49,7 @@ class BTree:
     # here the key is product id 
 
     def __init__(self,t):
-        self.tree = t
+        self.tree = t  # GS - the attribute is called "tree", so we need to access it that way
         self.root = Node(t, True)  # First root entry is leaf 
         self.node_count= 1 
         
@@ -78,14 +78,14 @@ class BTree:
             # If it's an internal node, find the correct child
             child_to_descend = node.children[i]
             # If the child is full, split it before descending
-            if len(child_to_descend.keys) == (2 * self.t - 1):
+            if len(child_to_descend.keys) == (2 * self.tree - 1):
                 node.split_child(i, child_to_descend)
                 # After splitting, the key might go into the new child or the current node
                 if key > node.keys[i]:
                     i += 1 # Move to the right child if key is greater than the promoted median
                 child_to_descend = node.children[i]
                 self.node_count += 1 # A new node was created during split
-            self._insert_non_full(child_to_descend, key)
+            self.insert_non_full(child_to_descend, key)
 
     #Search for key in in Binary- Tree
     def search(self, key):
@@ -93,7 +93,7 @@ class BTree:
 
     # Recursive search 
     def search_recursive(self, node, key):
-        if Node is None: 
+        if node is None: # corrected "Node" to "node"
             return None # key not found 
         
         i = node.find_key_index(key)
@@ -101,7 +101,7 @@ class BTree:
         # if key in current node 
         if i< len(node.keys) and node.keys[i] ==key:
             return node
-        elif node.if_leaf:
+        elif node.is_leaf:
             return None
         else:
             return self.search_recursive(node.children[i], key)
@@ -120,7 +120,7 @@ class BTree:
                     self.inorder_traverse_recursive(node.children[i], result_list)
                 result_list.append(node.keys[i])
             if not node.is_leaf:
-                self._traverse_recursive(node.children[len(node.keys)], result_list)
+                self.inorder_traverse_recursive(node.children[len(node.keys)], result_list)
 
     def get_height(self):
         """Calculates the height (depth) of the B-tree."""
