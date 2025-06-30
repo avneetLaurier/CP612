@@ -1,0 +1,7 @@
+{
+    "python.analysis.extraPaths": [
+        "./source_data",
+        "./sort_data",
+        "./b_tree"
+    ]
+}
