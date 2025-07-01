@@ -4,7 +4,6 @@ from b_tree import b_tree_files # was "from b_tree import *"
 from main.b_tree_validation import BTreeValidation
 
 def main():
-    b_tree = b_tree_files.BTree(5)
     prod_df = load_file.load_file()
     if prod_df is not None: 
        print('[DEBUG]Load Successful\n')
@@ -13,6 +12,7 @@ def main():
        product_ids = productid_sort['Product ID'].tolist()
 
     #Create B- Tree for product id 
+    b_tree = b_tree_files.BTree(5, name= "ProductID", sorted=True)
     for pid in product_ids: # we should try sorted vs unsorted insertion as an experiment later
        b_tree.insert(pid)
     

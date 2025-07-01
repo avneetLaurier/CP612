@@ -12,6 +12,7 @@ class Node:
         self.is_leaf = is_leaf
         self.keys = []       # List to store keys (Product IDs in this case)
         self.children = []   # List to store child nodes (pointers to other binary tree objects)
+        self.visits  = 0 # GS added to allow for performance evaluation
         
         
     def find_key_index(self, key):
@@ -48,10 +49,14 @@ class BTree:
     # tree can have at most 2*t -1 keys and 2*t , order m = 2t 
     # here the key is product id 
 
-    def __init__(self,t):
+    def __init__(self,t, name = "BTree", sorted=True):
         self.tree = t  # GS - the attribute is called "tree", so we need to access it that way
         self.root = Node(t, True)  # First root entry is leaf 
         self.node_count= 1 
+        
+        #GS - adding some metadata so we can tell which tree is which 
+        self.name = name # a string, so we can name trees.  we probably need to add key name(s)
+        self.sorted = sorted # a boolean to allow us to know if the data was pre-sorted
         
     # Insert keys
     def insert(self, key):
@@ -95,7 +100,7 @@ class BTree:
     def search_recursive(self, node, key):
         if node is None: # corrected "Node" to "node"
             return None # key not found 
-        
+        node.visits +=1
         i = node.find_key_index(key)
 
         # if key in current node 
@@ -133,4 +138,20 @@ class BTree:
             else: # Should not happen in a valid B-tree if not leaf and no children
                 break
         return height    
+    
+    def reset_visit_counts(self): #GS - sets all nodes to 0
+        def reset_node(node):
+            node.visit_count = 0
+            for child in node.children:
+                reset_node(child)
+        reset_node(self.root)
+
+    def get_total_visits(self):
+        def count_visits(node):
+            count = node.visit_count
+            for child in node.children:
+                count += count_visits(child)
+            return count
+        return count_visits(self.root)
+
         

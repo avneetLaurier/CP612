@@ -30,10 +30,22 @@ we need to iterate through a list, and product_ids is already sorted, as a coupl
        product_ids = productid_sort['Product ID'].tolist()
 
 
-
 note on approach. I see what you are doing now, and why it is so different to what i was doing. My instinct is to create a custom object for the product, while your 
 approach is to populate a dataframe (I have done a ton of reading on them), and reference that.  I am ok to try the df approach... let's see.  One of the issue will 
 be that each df is ALL of the data, so we will be copying the strings, the values, etc over each time we do a sort - there will be at least 6 dfs each with a full
 copy of the data. that's why I pulled the labels out and created a separate labels lookup. 
 
+continued. 
+
+8. i created a general sort (rather than specific by key)
+
+9. i moved the validation print to a separate function - this cleans up main.py, and makes it reusable... for next step
+
+10. I am adding visit counter to Node, and two service methods - one to get the count of visits (after a test), and one to reset counters
+
+11.  Added some meta-data to tree:
+    
+        #GS - adding some metadata so we can tell which tree is which 
+        self.name = name # a string, so we can name trees.  we probably need to add key name(s)
+        self.sorted = sorted # a boolean to allow us to know if the data was pre-sorted
 
