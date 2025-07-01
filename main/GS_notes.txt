@@ -49,3 +49,19 @@ continued.
         self.name = name # a string, so we can name trees.  we probably need to add key name(s)
         self.sorted = sorted # a boolean to allow us to know if the data was pre-sorted
 
+Happy Canada Day! I am starting on the performance tests now, and will not touch other files for now.
+
+12. adding logic to b_tree_performance_tests.py
+
+13.  Added a logger to accumulate results
+
+14. added call to logger in main, and to print final table
+
+15. I moved these 2 lines:
+       productid_sort = sort_by_variousId.sort_by_productid(prod_df)
+       product_ids = productid_sort['Product ID'].tolist()
+
+and replaced them with the generic sorter, sort_by_attribute:
+
+        sorted_df = sort_by_variousId.sort_by_attribute(prod_df, ['Merchant ID', 'Product ID'])
+        product_ids = sorted_df['Product ID'].tolist()

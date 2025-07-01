@@ -120,12 +120,40 @@ class BTree:
     # recursive inorder traversal
     def inorder_traverse_recursive(self, node, result_list):
         if node: 
+            node.visits += 1
             for i in range(len(node.keys)):
                 if not node.is_leaf:
                     self.inorder_traverse_recursive(node.children[i], result_list)
                 result_list.append(node.keys[i])
             if not node.is_leaf:
                 self.inorder_traverse_recursive(node.children[len(node.keys)], result_list)
+
+# GS added an efficient non-full traversal search that returns multiple keys IF btree is sorted.
+    def search_all_matches_sorted(self, key):
+        self.reset_visit_counts()
+        return self.search_all_matches_recursive(self.root, key, found=False)
+
+    def search_all_matches_recursive(self, node, key, found):
+        matches = []
+        if node is None:
+            return matches
+        node.visits += 1
+        for i in range(len(node.keys)):
+            if not node.is_leaf:
+                child_matches = self.search_all_matches_recursive(node.children[i], key, found)
+                matches.extend(child_matches)
+                if child_matches:
+                    found = True  
+            if node.keys[i] == key:
+                matches.append(node.keys[i])
+                found = True
+            elif found and node.keys[i] > key:
+                return matches  # Since sorted, no further matches will exist
+        if not node.is_leaf:
+            child_matches = self.search_all_matches_recursive(node.children[len(node.keys)], key, found)
+            matches.extend(child_matches)
+        return matches
+
 
     def get_height(self):
         """Calculates the height (depth) of the B-tree."""
@@ -141,14 +169,14 @@ class BTree:
     
     def reset_visit_counts(self): #GS - sets all nodes to 0
         def reset_node(node):
-            node.visit_count = 0
+            node.visits = 0
             for child in node.children:
                 reset_node(child)
         reset_node(self.root)
 
     def get_total_visits(self):
         def count_visits(node):
-            count = node.visit_count
+            count = node.visits
             for child in node.children:
                 count += count_visits(child)
             return count
