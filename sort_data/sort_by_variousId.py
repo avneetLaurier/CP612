@@ -47,4 +47,22 @@ def sort_by_categorylabel_producttitle(df):
     except Exception as e:
         print(f"Data cannot be sorted the DF is empty {e}") 
         return None    
+
+# GS _ i added a generic sorter - so we can try sorting by every combination to see what it does. 
+# However, I don't think it's the sort that matters, unless we also assign a key based on the sort order
+def sort_by_attribute (df, sort_attributes):
+    # attributes is a string value or list of strings
+    try:
+        if df is not None:
+            column_names = list(df.columns)
+            for attribute in sort_attributes:
+                if attribute not in column_names:
+                    print(f'Error no column {attribute}')
+                    return None
+            sorted_df = df.sort_values(by=sort_attributes)
+            return sorted_df
+    except Exception as e:
+        print(f"Data cannot be sorted the DF is empty {e}") 
+        return None    
+            
  
