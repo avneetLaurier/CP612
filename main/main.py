@@ -1,6 +1,7 @@
 from sort_data import sort_by_variousId
 from source_data import load_file #load_file  GS - changed "from load_data import *"
 from b_tree import b_tree_files # was "from b_tree import *"
+from main.b_tree_validation import BTreeValidation
 
 def main():
     b_tree = b_tree_files.BTree(5)
@@ -14,7 +15,12 @@ def main():
     #Create B- Tree for product id 
     for pid in product_ids: # we should try sorted vs unsorted insertion as an experiment later
        b_tree.insert(pid)
+    
+    validator = BTreeValidation (b_tree, product_ids)
+    validator.validate()
 
+
+''' <- moved to separate class, to keep code tight.
     # Display B-Tree properties
     print("\n--- B-Tree Statistics ---")
     print(f"B-Tree Minimum Degree (t): {b_tree.tree}")
@@ -49,6 +55,7 @@ def main():
         print(f"Search for {search_key_2}: Found (in node with keys: {found_node_2.keys})")
     else:
         print(f"Search for {search_key_2}: Not Found")
+'''
 
 if __name__ == '__main__':
     main()
