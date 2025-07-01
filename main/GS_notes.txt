@@ -1,0 +1,51 @@
+Hi Avneet - I will note my changes here in the order i do them.
+
+1. added the csv to the source_data directory and changed the absolute path to a relative path - will try the code now.
+
+2. i fixed up a number of the imports - added missing "from" statements and corrected "from"s pointing to class file rather than folder
+"from" needs to point to the folder or package.
+
+3. we need to pass the reference to product_dataframe to the sorters, so I added "prod_df" to the function calls, and "df" as a parameter inside each sorters
+- note - I also renamed "pd" in main.py to prod_df, as you use "pd" as your alias for pandas in load_file, and we should not use the same name for different things
+
+4. Added the following to the load to stripo leading spaces, which cause problems in " Merchant ID" for example 
+product_dataframe.columns = product_dataframe.columns.str.strip()
+
+5. In the following, i updated "b_tree.t" to "b_tree.tree", as the parameter is self.tree
+    print("\n--- B-Tree Statistics ---")
+    print(f"B-Tree Minimum Degree (t): {b_tree.t}")
+    print(f"Maximum keys per node: {2 * b_tree.t - 1}")
+    print(f"Minimum keys per non-root node: {b_tree.t - 1}")
+
+6. Same correction in the insert node...
+            # If the child is full, split it before descending
+            if len(child_to_descend.keys) == (2 * self.tree - 1):
+needs to be self.tree
+
+
+7. replaced:    for pid in productid_sort    with
+                for pid in product_ids...  
+we need to iterate through a list, and product_ids is already sorted, as a couple of lines above you have:
+       productid_sort = sort_by_variousId.sort_by_productid(prod_df)
+       product_ids = productid_sort['Product ID'].tolist()
+
+
+note on approach. I see what you are doing now, and why it is so different to what i was doing. My instinct is to create a custom object for the product, while your 
+approach is to populate a dataframe (I have done a ton of reading on them), and reference that.  I am ok to try the df approach... let's see.  One of the issue will 
+be that each df is ALL of the data, so we will be copying the strings, the values, etc over each time we do a sort - there will be at least 6 dfs each with a full
+copy of the data. that's why I pulled the labels out and created a separate labels lookup. 
+
+continued. 
+
+8. i created a general sort (rather than specific by key)
+
+9. i moved the validation print to a separate function - this cleans up main.py, and makes it reusable... for next step
+
+10. I am adding visit counter to Node, and two service methods - one to get the count of visits (after a test), and one to reset counters
+
+11.  Added some meta-data to tree:
+    
+        #GS - adding some metadata so we can tell which tree is which 
+        self.name = name # a string, so we can name trees.  we probably need to add key name(s)
+        self.sorted = sorted # a boolean to allow us to know if the data was pre-sorted
+
