@@ -1,8 +1,3 @@
-'''
-This version is intended to separate the key, so that it does not have to be 
-part of the record
-'''
-
 import pandas as pd 
 from sort_data import sort_by_variousId
 from source_data import load_file
@@ -47,49 +42,59 @@ class BTree:
     # tree can have at most 2*t -1 keys and 2*t , order m = 2t 
     # here the key is product id 
 
-    def __init__(self,t, key_generator, name = "BTree", sorted=True):
-        self.tree = t  
-        self.root = Node(t, True)  
+    def __init__(self,t, column_key="Product ID", name = "BTree", sorted=True):
+        self.tree = t  # GS - the attribute is called "tree", so we need to access it that way
+        self.root = Node(t, True)  # First root entry is leaf 
         self.node_count= 1 
+        self.column_key = column_key
         self.name = name # a string, so we can name trees.  we probably need to add key name(s)
         self.sorted = sorted # a boolean to allow us to know if the data was pre-sorted
     
     @classmethod
-    def create_Btree_from_df(cls, df, t, key_generator, name = "BTree"):
-        b_tree = cls(t, key_generator, name = name)
+    def create_Btree_from_df(cls, df, t, column_key):
+        if column_key not in df:
+            raise ValueError (f"Key column '{column_key}' not found in DataFrame.")
+        b_tree = cls(t, column_key)
         for idx, row in df.iterrows():
             record= row.to_dict()
-            key = key_generator.generate (record)
-            b_tree.insert(key, record)
+            b_tree.insert(record)
         return b_tree
         
-    def insert(self, key, record):
+    def insert(self, record):
+        #fetch key from record - GS - I dont think we need this for this dataset
+        if self.column_key not in record:
+            raise ValueError(f"Record missing key column '{self.column_key}'. Record: {record}")
         root_node = self.root
         # increase height if root is full
         if len(root_node.keys) == ((2*self.tree) -1):
-             root_new= Node(self.tree, False) 
-             root_new.children.append(root_node) 
+             root_new= Node(self.tree, False) # add new root not as leaf
+             root_new.children.append(root_node) # old root is not child of new node
              self.root = root_new
              self.node_count+=1
+             # split old root and insert record to new root 
              root_new.split_child(0, root_node)
-             self.insert_non_full(root_new, key, record)
+             self.insert_non_full(root_new, record)
         else:
-            self.insert_non_full(root_node, key, record)
+            self.insert_non_full(root_node, record)
 
     # insert to non-full node 
-    def insert_non_full(self, node, key, record):
+    def insert_non_full(self, node, record):
+        key = record[self.column_key]
         i = node.find_key_index(key)
+
         if node.is_leaf:
             node.keys.insert(i,key)
             node.record.insert(i,record)
         else:
+            # If it's an internal node, find the correct child
             child_to_descend = node.children[i]
+            # If the child is full, split it before descending
             if len(child_to_descend.keys) == (2 * self.tree - 1):
                 node.split_child(i, child_to_descend)
                 if key > node.keys[i]:
-                    i += 1
+                    i += 1 # Move to the right child if key is greater than the promoted median
                 child_to_descend = node.children[i]
-            self.insert_non_full(child_to_descend,key, record)
+            self.insert_non_full(child_to_descend,record)
 
     #Search for key in in Binary- Tree
     def search(self, key):
