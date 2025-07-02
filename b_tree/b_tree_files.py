@@ -1,45 +1,38 @@
 import pandas as pd 
-import math 
 from sort_data import sort_by_variousId
 from source_data import load_file
 
 class Node:
-    # t : minimumm dgeree, t-1 key for each node 
-    # is_leaf: True if node is a leaf 
-    # This B Tree is created with Productid as key 
     def __init__(self, t,is_leaf):
         self.t = t
         self.is_leaf = is_leaf
-        self.keys = []       # List to store keys (Product IDs in this case)
-        self.children = []   # List to store child nodes (pointers to other binary tree objects)
+        self.keys = []       # List to store keys
+        self.children = []   # List to store child nodes 
         self.visits  = 0 # GS added to allow for performance evaluation
-        
+        self.record=[] # get records as list to insert in node     
         
     def find_key_index(self, key):
-        """to find the index where the key should be inserted or where it is found.
-        Returns the index `i` such that self.keys[i-1] < key <= self.keys[i].
-        """
         i = 0
         while i < len(self.keys) and key > self.keys[i]:
             i += 1
         return i
 
     def split_child(self, i, child_node):
-        """
-        Splits a full child node (child_node, which is self.children[i]) into two.
-        The median key of the child_node is promoted to the current node.
-        """
         new_child = Node(self.t, child_node.is_leaf)
         # Insert new_child into self.children after child_node
         self.children.insert(i + 1, new_child)
         # Promote the median key from child_node to current node
-        median_key = self.t - 1 # Index of the median key in a full child_node
-        self.keys.insert(i, child_node.keys[median_key])
-
-        # Move keys from child_node to new_child
+        median_key = child_node.keys[self.t - 1] # Index of the median key in a full child_node
+        median_record= child_node.record[self.t-1]
+        # median_key = self.t - 1    GS - this is the old code. Looks wrong , but somehow worked? 
+        self.keys.insert(i, median_key)
+        self.record.insert(i, median_record)
+        # Populate keys & records in 2 child nodes - GS nice use of slicing!
         new_child.keys = child_node.keys[self.t:]
-        child_node.keys = child_node.keys[:self.t - 1] # Child_node retains keys before median
-
+        new_child.record = child_node.record[self.t:]
+        child_node.keys = child_node.keys[:self.t - 1]
+        child_node.records= child_node.record[:self.t-1]
+        
         # If child_node is not a leaf, move children too
         if not child_node.is_leaf:
             new_child.children = child_node.children[self.t:]
@@ -49,17 +42,28 @@ class BTree:
     # tree can have at most 2*t -1 keys and 2*t , order m = 2t 
     # here the key is product id 
 
-    def __init__(self,t, name = "BTree", sorted=True):
+    def __init__(self,t, column_key="Product ID", name = "BTree", sorted=True):
         self.tree = t  # GS - the attribute is called "tree", so we need to access it that way
         self.root = Node(t, True)  # First root entry is leaf 
         self.node_count= 1 
-        
-        #GS - adding some metadata so we can tell which tree is which 
+        self.column_key = column_key
         self.name = name # a string, so we can name trees.  we probably need to add key name(s)
         self.sorted = sorted # a boolean to allow us to know if the data was pre-sorted
+    
+    @classmethod
+    def create_Btree_from_df(cls, df, t, column_key):
+        if column_key not in df:
+            raise ValueError (f"Key column '{column_key}' not found in DataFrame.")
+        b_tree = cls(t, column_key)
+        for idx, row in df.iterrows():
+            record= row.to_dict()
+            b_tree.insert(record)
+        return b_tree
         
-    # Insert keys
-    def insert(self, key):
+    def insert(self, record):
+        #fetch key from record - GS - I dont think we need this for this dataset
+        if self.column_key not in record:
+            raise ValueError(f"Record missing key column '{self.column_key}'. Record: {record}")
         root_node = self.root
         # increase height if root is full
         if len(root_node.keys) == ((2*self.tree) -1):
@@ -67,30 +71,30 @@ class BTree:
              root_new.children.append(root_node) # old root is not child of new node
              self.root = root_new
              self.node_count+=1
-             # split old root and insert key to new root 
+             # split old root and insert record to new root 
              root_new.split_child(0, root_node)
-             self.insert_non_full(root_new, key)
+             self.insert_non_full(root_new, record)
         else:
-            self.insert_non_full(root_node, key)
+            self.insert_non_full(root_node, record)
 
     # insert to non-full node 
-    def insert_non_full(self, node,key):
+    def insert_non_full(self, node, record):
+        key = record[self.column_key]
         i = node.find_key_index(key)
 
         if node.is_leaf:
-            node.keys.insert(i, key) # if leaf insert the key directly
+            node.keys.insert(i,key)
+            node.record.insert(i,record)
         else:
             # If it's an internal node, find the correct child
             child_to_descend = node.children[i]
             # If the child is full, split it before descending
             if len(child_to_descend.keys) == (2 * self.tree - 1):
                 node.split_child(i, child_to_descend)
-                # After splitting, the key might go into the new child or the current node
                 if key > node.keys[i]:
                     i += 1 # Move to the right child if key is greater than the promoted median
                 child_to_descend = node.children[i]
-                self.node_count += 1 # A new node was created during split
-            self.insert_non_full(child_to_descend, key)
+            self.insert_non_full(child_to_descend,record)
 
     #Search for key in in Binary- Tree
     def search(self, key):

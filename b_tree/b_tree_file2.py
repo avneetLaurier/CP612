@@ -175,6 +175,8 @@ class BTree:
             if not node.is_leaf:
                 self.inorder_traverse_recursive(node.children[len(node.keys)], result_list)
 
+
+
     def get_height(self):
         """Calculates the height (depth) of the B-tree."""
         height = 0
