@@ -1,2 +1,2 @@
 Test Number,tree_name,min_deg,sorted,height,total_keys,num_nodes,avg_visits_exact_first,total_visits_exact_first,avg_visits_exact_all,total_visits_exact_all,total_matches_exact_all,avg_matches_exact_all,avg_visits_exact_first_opt,total_visits_exact_first_opt,avg_visits_range,total_visits_range,avg_keys_per_range,total_keys_found_range
-1,ProductID,5,True,5,35311,5954,5.6,56,5959.0,59590,10,1.0,174.7,1747,5959.0,59590,20.0,200
+1,ProductID,5,True,6,35311,8820,6.9,69,8826.0,88260,10,1.0,851.4,8514,8826.0,88260,20.0,200

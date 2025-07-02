@@ -13,18 +13,18 @@ def main():
        print('[DEBUG]Columns loaded:', prod_df.columns.tolist()) 
 
     #Create B- Tree for product id 
+    key_attribute = "Product ID"
     b_tree = b_tree_files.BTree(5, name= "ProductID", sorted=True)
-    sorted_df = sort_by_variousId.sort_by_attribute(prod_df, ['Merchant ID', 'Product ID'])
-    product_ids = sorted_df['Product ID'].tolist()
-    
-    for pid in product_ids: # we should try sorted vs unsorted insertion as an experiment later
-       b_tree.insert(pid)
+    sorted_df = sort_by_variousId.sort_by_attribute(prod_df, [key_attribute])
+    key_list = sorted_df[key_attribute].tolist()    
+    for key in key_list: # we should try sorted vs unsorted insertion as an experiment later
+       b_tree.insert(key)
     
     # GS - create a bunch of trees
     # GS - do the following for each tree
-    validator = BTreeValidation (b_tree, product_ids)
+    validator = BTreeValidation (b_tree, key_list)
     validator.validate()
-    performance = BTreePerformanceTests(b_tree, product_ids).test_all()
+    performance = BTreePerformanceTests(b_tree, key_list).test_all()
     results_logger.log_result(performance)
     
     
