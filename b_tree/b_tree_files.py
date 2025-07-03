@@ -29,7 +29,6 @@ class Node:
         # Promote the median key from child_node to current node
         median_key = child_node.keys[self.t - 1] # Index of the median key in a full child_node
         median_record= child_node.record[self.t-1]
-        # median_key = self.t - 1    GS - this is the old code. Looks wrong , but somehow worked? 
         self.keys.insert(i, median_key)
         self.record.insert(i, median_record)
         # Populate keys & records in 2 child nodes - GS nice use of slicing!

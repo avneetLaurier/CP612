@@ -16,7 +16,7 @@ def run_btree_experiment(df, key_attributes, t, results_logger, name=None):
     key_machine = KeyGenerator(*key_attributes)
     sorted_df = sort_by_variousId.sort_by_attribute(df, list(key_attributes))
     if not name:
-        name = f"{'_'.join(key_attributes)}_t{t}"
+        name = f"{'_'.join(key_attributes)}"
     b_tree = b_tree_files.BTree.create_Btree_from_df(sorted_df, t=t, key_generator=key_machine, name=name)
     key_list = key_machine.get_keys()
     # Validate and test performance
@@ -38,16 +38,13 @@ def main():
     print('[DEBUG]Load Successful\n')
     print('[DEBUG]Columns loaded:', prod_df.columns.tolist()) 
     
-    #run_btree_experiment(prod_df, key_attributes=("Product ID",), t=5, results_logger=results_logger)
-    
-    # finally the loop!
     for min_deg in range(3, 8):
         for col in prod_df.columns:
             run_btree_experiment(prod_df, key_attributes=(col,), t=min_deg, results_logger=results_logger)
 
 
     # GS - these don't work yet
-#    run_btree_experiment(prod_df, key_attributes=["Merchant ID", "Cluster ID"], t=min_deg, results_logger=results_logger)
+    run_btree_experiment(prod_df, key_attributes=("Merchant ID", "Cluster ID"), t=5, results_logger=results_logger)
 #    run_btree_experiment(prod_df, key_attributes = ["Cluster ID", "Merchant ID"], t=min_deg, results_logger=results_logger)
     
     # THIS is after we loop through all the trees.
