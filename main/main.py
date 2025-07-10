@@ -31,22 +31,22 @@ def run_btree_experiment(df, key_attributes, t, results_logger, name=None):
 
 def main():
     prod_df = load_file.load_file()
-    results_logger = PerformanceResultsLogger()
+    results_logger = PerformanceResultsLogger()   
+    composite_keys = [("Merchant ID", "Cluster ID"), ("Cluster ID", "Merchant ID"),
+        ("Category ID", "Cluster ID"),("Category Label", "Cluster Label"),]
     if prod_df is None:
        print('Invalid Dataframe')
        return 
     print('[DEBUG]Load Successful\n')
     print('[DEBUG]Columns loaded:', prod_df.columns.tolist()) 
-    
-    for min_deg in range(3, 8):
-        for col in prod_df.columns:
+
+    for col in prod_df.columns:
+        for min_deg in range(3, 12):
             run_btree_experiment(prod_df, key_attributes=(col,), t=min_deg, results_logger=results_logger)
+    for keys in composite_keys:
+        for min_deg in range(3, 12):
+            run_btree_experiment(prod_df, key_attributes=keys, t=min_deg, results_logger=results_logger)
 
-
-    # GS - these don't work yet
-    run_btree_experiment(prod_df, key_attributes=("Merchant ID", "Cluster ID"), t=5, results_logger=results_logger)
-#    run_btree_experiment(prod_df, key_attributes = ["Cluster ID", "Merchant ID"], t=min_deg, results_logger=results_logger)
-    
     # THIS is after we loop through all the trees.
     results_logger.save_to_csv() 
     print(results_logger.get_dataframe().to_string(index=False))
