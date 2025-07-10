@@ -2,182 +2,226 @@
 This version is intended to separate the key, so that it does not have to be 
 part of the record
 '''
-
-import pandas as pd 
-from sort_data import sort_by_variousId
-from source_data import load_file
-
 class Node:
-    def __init__(self, t,is_leaf):
+    def __init__(self, t, is_leaf):
         self.t = t
         self.is_leaf = is_leaf
-        self.keys = []       # List to store keys
-        self.children = []   # List to store child nodes 
-        self.visits  = 0 # GS added to allow for performance evaluation
-        self.record=[] # get records as list to insert in node     
-        
+        self.keys = []
+        self.children = []
+        self.record = []
+        self.visits = 0
+        self.comparisons = 0
+
     def find_key_index(self, key):
         i = 0
-        while i < len(self.keys) and key > self.keys[i]:
+        while i < len(self.keys):
+            self.comparisons += 1
+            if key <= self.keys[i]:
+                break
             i += 1
         return i
 
     def split_child(self, i, child_node):
         new_child = Node(self.t, child_node.is_leaf)
-        # Insert new_child into self.children after child_node
         self.children.insert(i + 1, new_child)
-        # Promote the median key from child_node to current node
-        median_key = child_node.keys[self.t - 1] # Index of the median key in a full child_node
-        median_record= child_node.record[self.t-1]
+        median_key = child_node.keys[self.t - 1]
+        median_record = child_node.record[self.t - 1]
         self.keys.insert(i, median_key)
         self.record.insert(i, median_record)
-        # Populate keys & records in 2 child nodes - GS nice use of slicing!
+
         new_child.keys = child_node.keys[self.t:]
         new_child.record = child_node.record[self.t:]
         child_node.keys = child_node.keys[:self.t - 1]
-        child_node.records= child_node.record[:self.t-1]
-        
-        # If child_node is not a leaf, move children too
+        child_node.record = child_node.record[:self.t - 1]
+
         if not child_node.is_leaf:
             new_child.children = child_node.children[self.t:]
             child_node.children = child_node.children[:self.t]
 
-class BTree:
-    # tree can have at most 2*t -1 keys and 2*t , order m = 2t 
-    # here the key is product id 
 
-    def __init__(self,t, key_generator, name = "BTree", sorted=True):
-        self.tree = t  
-        self.root = Node(t, True)  
-        self.node_count= 1 
-        self.name = name # a string, so we can name trees.  we probably need to add key name(s)
-        self.sorted = sorted # a boolean to allow us to know if the data was pre-sorted
-    
+class BTree:
+    def __init__(self, t, name="BTree", sorted=True):
+        self.tree = t
+        self.root = Node(t, True)
+        self.node_count = 1
+        self.name = name
+        self.sorted = sorted
+
     @classmethod
-    def create_Btree_from_df(cls, df, t, key_generator, name = "BTree"):
-        b_tree = cls(t, key_generator, name = name)
-        for idx, row in df.iterrows():
-            record= row.to_dict()
-            key = key_generator.generate (record)
+    def create_Btree_from_df(cls, df, t, key_generator, name="BTree"):
+        b_tree = cls(t, name=name)
+        for _, row in df.iterrows():
+            record = row.to_dict()
+            key = key_generator.generate(record)
             b_tree.insert(key, record)
         return b_tree
-        
-    def insert(self, key, record):
-        root_node = self.root
-        # increase height if root is full
-        if len(root_node.keys) == ((2*self.tree) -1):
-             root_new= Node(self.tree, False) 
-             root_new.children.append(root_node) 
-             self.root = root_new
-             self.node_count+=1
-             root_new.split_child(0, root_node)
-             self.insert_non_full(root_new, key, record)
-        else:
-            self.insert_non_full(root_node, key, record)
 
-    # insert to non-full node 
+    def insert(self, key, record):
+        root = self.root
+        if len(root.keys) == (2 * self.tree) - 1:
+            new_root = Node(self.tree, False)
+            new_root.children.append(root)
+            self.root = new_root
+            self.node_count += 1
+            new_root.split_child(0, root)
+            self.insert_non_full(new_root, key, record)
+        else:
+            self.insert_non_full(root, key, record)
+
     def insert_non_full(self, node, key, record):
         i = node.find_key_index(key)
         if node.is_leaf:
-            node.keys.insert(i,key)
-            node.record.insert(i,record)
+            node.keys.insert(i, key)
+            node.record.insert(i, record)
         else:
-            child_to_descend = node.children[i]
-            if len(child_to_descend.keys) == (2 * self.tree - 1):
-                node.split_child(i, child_to_descend)
+            child = node.children[i]
+            if len(child.keys) == (2 * self.tree - 1):
+                node.split_child(i, child)
                 if key > node.keys[i]:
                     i += 1
-                child_to_descend = node.children[i]
-            self.insert_non_full(child_to_descend,key, record)
+                child = node.children[i]
+            self.insert_non_full(child, key, record)
 
-    #Search for key in in Binary- Tree
-    def search(self, key):
-        return self.search_recursive(self.root, key)
-
-    # Recursive search 
-    def search_recursive(self, node, key):
-        if node is None: # corrected "Node" to "node"
-            return None # key not found 
-        node.visits +=1
-        i = node.find_key_index(key)
-
-        # if key in current node 
-        if i< len(node.keys) and node.keys[i] ==key:
-            return node
-        elif node.is_leaf:
-            return None
-        else:
-            return self.search_recursive(node.children[i], key)
-        
-    
-    def inorder_traverse(self):
-        result=[]
-        self.inorder_traverse_recursive(self.root, result)
-        return result
-    
-    # recursive inorder traversal
-    def inorder_traverse_recursive(self, node, result_list):
-        if node: 
-            node.visits += 1
-            for i in range(len(node.keys)):
-                if not node.is_leaf:
-                    self.inorder_traverse_recursive(node.children[i], result_list)
-                result_list.append(node.keys[i])
-            if not node.is_leaf:
-                self.inorder_traverse_recursive(node.children[len(node.keys)], result_list)
-
-# GS added an efficient non-full traversal search that returns multiple keys IF btree is sorted.
-    def search_all_matches_sorted(self, key):
+    def search_first_match(self, key):
         self.reset_visit_counts()
-        return self.search_all_matches_recursive(self.root, key, found=False)
+        return self._search_first_match(self.root, key)
 
-    def search_all_matches_recursive(self, node, key, found):
-        matches = []
-        if node is None:
-            return matches
+    def _search_first_match(self, node, key):
+        node.visits += 1
+        i = node.find_key_index(key)
+        if i < len(node.keys) and node.keys[i] == key:
+            return node.record[i]  # returning the actual record - since returning the key is just checking for existence
+        if node.is_leaf:
+            return None  # we didn;t find
+        return self._search_first_match(node.children[i], key)
+
+    def search_all_matches(self, key):
+        self.reset_visit_counts()
+        results = [] # results will eb alist of records
+        self._search_all_matches(self.root, key, results)
+        return results
+
+    def _search_all_matches(self, node, key, results):
         node.visits += 1
         for i in range(len(node.keys)):
             if not node.is_leaf:
-                child_matches = self.search_all_matches_recursive(node.children[i], key, found)
-                matches.extend(child_matches)
-                if child_matches:
-                    found = True  
+                self._search_all_matches(node.children[i], key, results)
+            node.comparisons += 1
             if node.keys[i] == key:
-                matches.append(node.keys[i])
-                found = True
-            elif found and node.keys[i] > key:
-                return matches  # Since sorted, no further matches will exist
+                results.append(node.record[i]) # returning record,
+            elif node.keys[i] > key and self.sorted:
+                return
         if not node.is_leaf:
-            child_matches = self.search_all_matches_recursive(node.children[len(node.keys)], key, found)
-            matches.extend(child_matches)
-        return matches
+            self._search_all_matches(node.children[-1], key, results)
 
+    def range_search(self, key_min, key_max):
+        self.reset_visit_counts()
+        results = []
+        self._range_search(self.root, key_min, key_max, results)
+        return results
+
+    def _range_search(self, node, key_min, key_max, results):
+        node.visits += 1
+        for i in range(len(node.keys)):  #iterate through keys
+            if not node.is_leaf:
+                self._range_search(node.children[i], key_min, key_max, results)
+            node.comparisons += 1
+            if key_min <= node.keys[i] <= key_max:
+                results.append(node.record[i])
+            elif node.keys[i] > key_max and self.sorted:
+                return
+        if not node.is_leaf:
+            self._range_search(node.children[-1], key_min, key_max, results)
+            
+    def search_starting_with(self, start):
+        self.reset_visit_counts()
+        results = []
+        self._search_starting_with(self.root, start, results)
+        return results
+
+    def _search_starting_with(self, node, start, results):
+        node.visits += 1
+        for i in range(len(node.keys)):
+            if not node.is_leaf:
+                self._search_starting_with(node.children[i], start, results)
+            node.comparisons += 1
+            if node.keys[i].startswith(start):
+                results.append(node.record[i])
+            elif node.keys[i] > start and self.sorted:
+                return
+        if not node.is_leaf:
+            self._search_starting_with(node.children[-1], start, results)
+            
+    def search_composite(self, key_1=None, key_2=None):
+        self.reset_visit_counts()
+        results = []
+        mode = 2 if key_1 and key_2 else (1 if key_2 else 0)
+        if mode == 0: search_key = key_1
+        elif mode == 1: search_key = key_2
+        else: search_key = f'{key_1} - {key_2}'
+        self._search_composite(self.root, search_key, mode, results)
+        return results
+
+
+    def _search_composite(self, node, search_key, mode, results):
+        node.visits += 1
+        for i in range(len(node.keys)):
+            if not node.is_leaf:
+                self._search_composite(node.children[i], search_key, mode, results)
+            node.comparisons += 1
+            key = node.keys[i]
+            if mode in (0, 2):  # Modes 0 and 2: stop if first part exceeds search_key
+                first_part = key.split(' - ', 1)[0]
+                if (mode == 2 and key == search_key) or (mode == 0 and first_part == search_key):
+                    results.append(node.record[i])
+                elif first_part > search_key and self.sorted:
+                    return
+            else:
+                parts = key.split(' - ', 1)
+                if len(parts) > 1 and parts[1] == search_key:
+                    results.append(node.record[i])
+                    ## this ended up being more complicated that i thought.
+
+        if not node.is_leaf:
+            self._search_composite(node.children[-1], search_key, mode, results)
+
+    def inorder_traverse(self):
+        result = []
+        self._inorder_traverse_recursive(self.root, result)
+        return result
+
+    def _inorder_traverse_recursive(self, node, result_list):
+        if node:
+            node.visits += 1
+            for i in range(len(node.keys)):
+                if not node.is_leaf:
+                    self._inorder_traverse_recursive(node.children[i], result_list)
+                result_list.append(node.record[i])
+            if not node.is_leaf:
+                self._inorder_traverse_recursive(node.children[-1], result_list)
 
     def get_height(self):
-        """Calculates the height (depth) of the B-tree."""
         height = 0
-        current_node = self.root
-        while not current_node.is_leaf:
+        node = self.root
+        while not node.is_leaf:
+            node = node.children[0]
             height += 1
-            if current_node.children: # Only proceed if it has children
-                current_node = current_node.children[0] # Go down left-most child
-            else: # Should not happen in a valid B-tree if not leaf and no children
-                break
-        return height    
-    
-    def reset_visit_counts(self): #GS - sets all nodes to 0
-        def reset_node(node):
-            node.visits = 0
-            for child in node.children:
-                reset_node(child)
+        return height
+
+    def reset_visit_counts(self):
+        def reset_node(n):
+            n.visits = 0
+            n.comparisons = 0
+            for c in n.children:
+                reset_node(c)
         reset_node(self.root)
 
     def get_total_visits(self):
-        def count_visits(node):
-            count = node.visits
-            for child in node.children:
-                count += count_visits(child)
-            return count
+        def count_visits(n):
+            return n.visits + sum(count_visits(c) for c in n.children)
         return count_visits(self.root)
 
-        
+    def get_total_comparisons(self):
+        def count_comparisons(n):
+            return n.comparisons + sum(count_comparisons(c) for c in n.children)
+        return count_comparisons(self.root)

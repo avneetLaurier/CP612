@@ -65,3 +65,11 @@ and replaced them with the generic sorter, sort_by_attribute:
 
         sorted_df = sort_by_variousId.sort_by_attribute(prod_df, ['Merchant ID', 'Product ID'])
         product_ids = sorted_df['Product ID'].tolist()
+
+
+JUly 10 - 
+16. Composite key fixed - just made it a concatenated string
+17. Switched order of  the tests - grouped by Key - then cycle through the order options
+18. cleaning up data to results to make easier to read by removing total counters
+19. OK - this was tricker.  Created a uniqueValues method in load, to create a deduped list for each columns
+20. this will allow us to check search efficiency when looking for all of the products for a specific merchant, etc
