@@ -2,8 +2,8 @@ import random
 import source_data.load_file as load_file
 
 class BTreePerformanceTests:
-    EXACT_SEARCH_TESTS = 10
-    RANGE_SEARCH_TESTS = 10
+    EXACT_SEARCH_TESTS = 100
+    RANGE_SEARCH_TESTS = 100
     RANGE_SEARCH_WIDTH = 20
     VISIT_COST_UNIT = 5
 
@@ -11,7 +11,7 @@ class BTreePerformanceTests:
         self.b_tree = b_tree
         self.key_list = sorted(key_list)
 
-    def _run_test(self, search_func, keys, description):
+    def run_test(self, search_func, keys, description):
         print(f'\n[Test] {description} ({len(keys)} keys)')
         total_visits = 0
         total_comparisons = 0
@@ -45,7 +45,7 @@ class BTreePerformanceTests:
 
     def test_exact_search_first_match(self):
         test_keys = random.choices(self.key_list, k=self.EXACT_SEARCH_TESTS)
-        return self._run_test(self._search_first_match, test_keys, "Exact Search First Match Only")
+        return self.run_test(self._search_first_match, test_keys, "Exact Search First Match Only")
 
     def _search_first_match(self, key):
         result = self.b_tree.search_first_match(key)
@@ -53,7 +53,7 @@ class BTreePerformanceTests:
 
     def test_exact_search_all_matches(self):
         test_keys = random.choices(self.key_list, k=self.EXACT_SEARCH_TESTS)
-        return self._run_test(self._search_all_matches, test_keys, "Exact Search All Matches")
+        return self.run_test(self._search_all_matches, test_keys, "Exact Search All Matches")
 
     def _search_all_matches(self, key):
         return self.b_tree.search_all_matches(key)
@@ -93,6 +93,33 @@ class BTreePerformanceTests:
             'range_search_avg_results': avg_results,
             'range_search_avg_cost': avg_cost
         }
+
+    def test_composite_key_search(self):
+        print('\n[Test] Composite Key Search')
+        combined_results = {}
+        composite_key = random.choice(self.key_list)
+        parts = composite_key.split(' - ', 1)
+        key_1_sample = parts[0]
+        key_2_sample = parts[1] if len(parts) > 1 else ''
+
+        def search_full(_): 
+            return self.b_tree.search_composite(key_1=key_1_sample, key_2=key_2_sample)
+        results_full = self.run_test(search_full, [None], "Composite Search Full Key")
+        combined_results.update(results_full)
+
+        def search_key1(_): 
+            return self.b_tree.search_composite(key_1=key_1_sample)
+        results_key1 = self.run_test(search_key1, [None], "Composite Search First Key")
+        combined_results.update(results_key1)
+
+        def search_key2(_): 
+            return self.b_tree.search_composite(key_2=key_2_sample)
+        results_key2 = self.run_test(search_key2, [None], "Composite Search Second Key")
+        combined_results.update(results_key2)
+
+        return combined_results
+
+
 
 
     def test_all(self):

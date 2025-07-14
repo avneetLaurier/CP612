@@ -1,0 +1,45 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #F5F5F5;
+    color: #333;
+    padding: 1rem;
+}
+
+header {
+    background-color: #4F2C7E;
+    color: #fff;
+    text-align: center;
+    padding: 1rem;
+    font-size: 1.5rem;
+}
+
+button {
+    background-color: #FFD200;
+    color: #4F2C7E;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+}
+
+input, select {
+    padding: 0.5rem;
+    margin-top: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.result-box {
+    background: #fff;
+    border-left: 5px solid #4F2C7E;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+.result-box table {
+    font-size: 0.75rem;
+}
+
+.result-box th,
+.result-box td {
+    padding: 0.3rem 0.5rem;
+    text-align: left;
+}
+
