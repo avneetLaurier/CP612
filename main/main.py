@@ -28,6 +28,17 @@ def run_btree_experiment(df, key_attributes, t, results_logger, name=None):
     performance['tree_name'] = name
     results_logger.log_result(performance)
 
+def run_composite_key_search(prod_df, keys, results_logger, t=9):
+# composite key tests only - min deg = 9
+    print(f'\n[INFO] Running composite key search for {keys} at degree {t}')
+    key_machine = KeyGenerator(*keys)
+    sorted_df = sort_by_variousId.sort_by_attribute(prod_df, list(keys))
+    b_tree = b_tree_files.BTree.create_Btree_from_df(sorted_df, t=t, key_generator=key_machine, name=f"{'_'.join(keys)}")
+    key_list = key_machine.get_keys()
+    composite_results = BTreePerformanceTests(b_tree, key_list).test_composite_key_search()
+    composite_results['tree_name'] = f"{'_'.join(keys)}_composite_search_demo"
+    results_logger.log_result(composite_results)
+
 
 def main():
     prod_df = load_file.load_file()
@@ -41,11 +52,12 @@ def main():
     print('[DEBUG]Columns loaded:', prod_df.columns.tolist()) 
 
     for col in prod_df.columns:
-        for min_deg in range(3, 12):
+        for min_deg in range(3, 16):
             run_btree_experiment(prod_df, key_attributes=(col,), t=min_deg, results_logger=results_logger)
     for keys in composite_keys:
-        for min_deg in range(3, 12):
+        for min_deg in range(3, 16):
             run_btree_experiment(prod_df, key_attributes=keys, t=min_deg, results_logger=results_logger)
+        run_composite_key_search(prod_df, keys, results_logger, t=9)
 
     # THIS is after we loop through all the trees.
     results_logger.save_to_csv() 
