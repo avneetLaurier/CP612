@@ -28,20 +28,27 @@ for key1, key2 in composite_keys:
 def test():
     return render_template('index.html', trees=["T1"], selected_tree=None, result=None)
 
-
-@app.route("/", methods=["GET", "POST"])
+@app.route("/", methods=["GET","POST"])  # need both Get and POST - need GET for initial page load. 
 def index():
     result = None
-    selected_tree = request.form.get("tree_name", "product_id")  # default tree
+    selected_tree = request.form.get("tree_name", "product_id")
     query = request.form.get("query", "").strip()
+    range_start = request.form.get("range_start", "").strip()
+    range_end = request.form.get("range_end", "").strip()
+    prefix = request.form.get("prefix", "").strip()
 
-    if request.method == "POST" and query:
-        btree = btrees.get(selected_tree)
-        if not btree:
-            result = "Invalid tree selected."
+    btree = btrees.get(selected_tree)
+    if not btree:
+        result = "Invalid tree selected."
+    elif request.method == "POST":
+        if query:
+            result = btree.search_all_matches(query) or "No matches found."
+        elif range_start and range_end:
+            result = btree.range_search(range_start, range_end) or "No matches found in range."
+        elif prefix:
+            result = btree.search_starting_with(prefix) or "No matches found for prefix."
         else:
-            matches = btree.search_all_matches(query)
-            result = matches if matches else "No matches found."
+            result = "Please enter a search value."
 
     return render_template("index.html", result=result, trees=btrees.keys(), selected_tree=selected_tree)
 

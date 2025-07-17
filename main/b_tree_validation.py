@@ -10,9 +10,10 @@ class BTreeValidation:
         print(f"Maximum keys per node: {2 * t - 1}")
         print(f"Minimum keys per non-root node: {t - 1}")
         print(f"Total entries inserted: {len(self.key_list)}")
+        self.b_tree.inorder_traverse()
         print(f"Number of nodes in the B-Tree: {self.b_tree.node_count}")
         print(f"Height of the B-Tree: {self.b_tree.get_height()} (root at level 0)")
-
+        
     def verify_sorting(self):
         print("\n--- Verifying B-Tree Order (First 20 and Last 20 keys via traversal) ---")
         traversed_keys = self.b_tree.inorder_traverse()
