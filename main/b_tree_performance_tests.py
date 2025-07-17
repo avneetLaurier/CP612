@@ -1,9 +1,10 @@
 import random
+import sys
 import source_data.load_file as load_file
 
 class BTreePerformanceTests:
-    EXACT_SEARCH_TESTS = 100
-    RANGE_SEARCH_TESTS = 100
+    EXACT_SEARCH_TESTS = 10
+    RANGE_SEARCH_TESTS = 10
     RANGE_SEARCH_WIDTH = 20
     VISIT_COST_UNIT = 5
 
@@ -129,6 +130,8 @@ class BTreePerformanceTests:
         print(f'Sorted Input: {self.b_tree.sorted}')
         print(f'Height: {self.b_tree.get_height()}')
         print(f'Total Keys: {len(self.key_list)}')
+        print(f'size: {sys.getsizeof(self.b_tree)}')
+        self.b_tree.inorder_traverse()
 
         results = {
             'tree_name': self.b_tree.name,
@@ -136,7 +139,8 @@ class BTreePerformanceTests:
             'sorted': self.b_tree.sorted,
             'height': self.b_tree.get_height(),
             'total_keys': len(self.key_list),
-            'num_nodes': self.b_tree.node_count
+            'num_nodes': self.b_tree.node_count,
+            'size': sys.getsizeof(self.b_tree)
         }
 
         results.update(self.test_exact_search_first_match())

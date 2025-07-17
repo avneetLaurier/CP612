@@ -54,6 +54,7 @@ class BTree:
             record = row.to_dict()
             key = key_generator.generate(record)
             b_tree.insert(key, record)
+        b_tree.inorder_traverse()
         return b_tree
 
     def insert(self, key, record):
@@ -187,12 +188,14 @@ class BTree:
 
     def inorder_traverse(self):
         result = []
+        self.node_count = 0
         self._inorder_traverse_recursive(self.root, result)
         return result
 
     def _inorder_traverse_recursive(self, node, result_list):
         if node:
             node.visits += 1
+            self.node_count +=1
             for i in range(len(node.keys)):
                 if not node.is_leaf:
                     self._inorder_traverse_recursive(node.children[i], result_list)
