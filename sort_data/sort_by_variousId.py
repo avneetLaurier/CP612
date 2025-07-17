@@ -63,6 +63,21 @@ def sort_by_attribute(df, sort_attributes, reverse=False):
     except Exception as e:
         print(f"Data cannot be sorted: {e}") 
         return None
+          
+ # I am adding a random sort - same code, but adding randomize
+def random_sort_by_attribute(df, sort_attributes, reverse=False):
+    try:
+        if df is not None:
+            column_names = list(df.columns)
+            for attribute in sort_attributes:
+                if attribute not in column_names:
+                    print(f'Error: no column {attribute}')
+                    return None
+            random_df = df.sample(frac=1, random_state=1) # note the Rand state is a seed
+            random_df = random_df.reset_index(drop=True)  # ugh - need this for iterator to work
+            return random_df
+    except Exception as e:
+        print(f"Data cannot be randomized: {e}") 
+        return None
  
-            
- 
+   

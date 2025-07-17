@@ -15,8 +15,7 @@ sys.path.insert(0, project_root)  # Insert at beginning so it takes priority
 def run_btree_experiment(df, key_attributes, t, results_logger, name=None, reverse = False):
     key_machine = KeyGenerator(*key_attributes)
     sorted_df = sort_by_variousId.sort_by_attribute(df, list(key_attributes), reverse = reverse)
-    if not name:
-        name = f"{'_'.join(key_attributes)}"
+    name = f"{'_'.join(key_attributes)}"
     b_tree = b_tree_files.BTree.create_Btree_from_df(sorted_df, t=t, key_generator=key_machine, name=name)
     b_tree.sorted = not reverse
     key_list = key_machine.get_keys()
@@ -24,8 +23,6 @@ def run_btree_experiment(df, key_attributes, t, results_logger, name=None, rever
     validator = BTreeValidation(b_tree, key_list)
     validator.validate()
     performance = BTreePerformanceTests(b_tree, key_list).test_all()
-    
-    # Add the name to the performance record
     performance['tree_name'] = name
     results_logger.log_result(performance)
 
@@ -39,6 +36,20 @@ def run_composite_key_search(prod_df, keys, results_logger, t=9):
     composite_results = BTreePerformanceTests(b_tree, key_list).test_composite_key_search()
     composite_results['tree_name'] = f"{'_'.join(keys)}_composite_search_demo"
     results_logger.log_result(composite_results)
+
+# last minute add - randomize sort 
+def randomized_btree_experiment(df, key_attributes, t, results_logger, name=None, reverse = False):
+    key_machine = KeyGenerator(*key_attributes)
+    random_df = sort_by_variousId.random_sort_by_attribute(df, list(key_attributes), reverse = reverse)
+    name = f"{'_'.join(key_attributes)}_rand"
+    b_tree = b_tree_files.BTree.create_Btree_from_df(random_df, t=t, key_generator=key_machine, name=name)
+    key_list = key_machine.get_keys()
+    # Validate and test performance
+    validator = BTreeValidation(b_tree, key_list)
+    validator.validate()
+    performance = BTreePerformanceTests(b_tree, key_list).test_all()
+    performance['tree_name'] = name
+    results_logger.log_result(performance)
 
 
 def main():
@@ -69,6 +80,16 @@ def main():
         for min_deg in range(3, 16):
             run_btree_experiment(prod_df, key_attributes=keys, t=min_deg, results_logger=results_logger)
         run_composite_key_search(prod_df, keys, results_logger, t=9)
+
+
+# running with random sort
+    for col in prod_df.columns:
+        for min_deg in range(3, 16):
+            randomized_btree_experiment(prod_df, key_attributes=(col,), t=min_deg, results_logger=results_logger)
+    for keys in composite_keys:
+        for min_deg in range(3, 16):
+            randomized_btree_experiment(prod_df, key_attributes=keys, t=min_deg, results_logger=results_logger)
+ 
 
     # THIS is after we loop through all the trees.
     results_logger.save_to_csv() 
