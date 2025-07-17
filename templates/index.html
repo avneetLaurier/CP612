@@ -27,6 +27,9 @@
 
 
         {% if result %}
+            {% if visits is not none and comparisons is not none %}
+                <p><strong>Node Visits:</strong> {{ visits }} | <strong>Comparisons:</strong> {{ comparisons }}</p>
+            {% endif %}
             <div class="result-box">
                 <h2>Results</h2>
                 {% if result is string %}
