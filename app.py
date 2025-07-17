@@ -12,7 +12,7 @@ composite_keys = [  ("Merchant ID", "Cluster ID"),  ("Merchant ID", "Category ID
 btrees = {}
 t = 9 # min degree for thse trees
 
-# Create trees for single-column keys - set min deg at 9... or per experiment results
+# Create trees for single-column keys - set min deg at 9
 for col in columns:
     key_machine = KeyGenerator(col)
     name = col.lower().replace(" ", "_")  #needed for URLs
@@ -24,31 +24,29 @@ for key1, key2 in composite_keys:
     name = f"{key1.lower()}_{key2.lower()}".replace(" ", "_")
     btrees[name] = BTree.create_Btree_from_df(df, t=t, key_generator=key_machine, name=name)
 
-@app.route('/test')
-def test():
-    return render_template('index.html', trees=["T1"], selected_tree=None, result=None)
-
 @app.route("/", methods=["GET","POST"])  # need both Get and POST - need GET for initial page load. 
 def index():
     result = None
     selected_tree = request.form.get("tree_name", "product_id")
-    query = request.form.get("query", "").strip()
+    query = request.form.get("query", "").strip()  #exact match all
+    
     range_start = request.form.get("range_start", "").strip()
-    range_end = request.form.get("range_end", "").strip()
-    prefix = request.form.get("prefix", "").strip()
+    range_end = request.form.get("range_end", "").strip() # range search all
+    
+    start = request.form.get("start", "").strip()
 
     btree = btrees.get(selected_tree)
     if not btree:
-        result = "Invalid tree selected."
-    elif request.method == "POST":
+        result = "Tree not found!"
+    elif request.method == "POST":  #i really want to do a case here... I miss java 
         if query:
             result = btree.search_all_matches(query) or "No matches found."
         elif range_start and range_end:
-            result = btree.range_search(range_start, range_end) or "No matches found in range."
-        elif prefix:
-            result = btree.search_starting_with(prefix) or "No matches found for prefix."
+            result = btree.range_search(range_start, range_end) or "No matches found."
+        elif start:
+            result = btree.search_starting_with(start) or "No matches found."
         else:
-            result = "Please enter a search value."
+            result = "Please enter value to search."
 
     return render_template("index.html", result=result, trees=btrees.keys(), selected_tree=selected_tree)
 

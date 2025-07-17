@@ -6,7 +6,7 @@
 <body>
     <header>Search the B-Trees</header>
 
-  <div class="content">
+    <div class="content">
         <form method="POST">
             <label for="tree_name">Tree:</label>
             <select name="tree_name">
@@ -14,9 +14,17 @@
                     <option value="{{ tree }}" {% if tree == selected_tree %}selected{% endif %}>{{ tree }}</option>
                 {% endfor %}
             </select>
-            <input type="text" name="query" placeholder="Enter key..." required>
+            <h4>Exact Match Search</h4>
+            <input type="text" name="query" placeholder="Enter full key...">
+            <h4>Range Search</h4>
+            <input type="text" name="range_start" placeholder="Start key">
+            <input type="text" name="range_end" placeholder="End key">
+            <h4>Starts With Search </h4>
+            <input type="text" name="start" placeholder="Starts with...">
+            <br>
             <button type="submit">Search</button>
         </form>
+
 
         {% if result %}
             <div class="result-box">
