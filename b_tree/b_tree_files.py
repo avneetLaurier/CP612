@@ -85,7 +85,8 @@ class BTree:
 
     def search_first_match(self, key):
         self.reset_visit_counts()
-        return self._search_first_match(self.root, key)
+        match = self._search_first_match(self.root, key)
+        return [match] if match else None
 
     def _search_first_match(self, node, key):
         node.visits += 1
@@ -106,14 +107,16 @@ class BTree:
         node.visits += 1
         for i in range(len(node.keys)):
             if not node.is_leaf:
-                self._search_all_matches(node.children[i], key, results)
+                if key <= node.keys[i] or not self.sorted:
+                    self._search_all_matches(node.children[i], key, results)
             node.comparisons += 1
             if node.keys[i] == key:
-                results.append(node.record[i]) # returning record,
+                results.append(node.record[i])
             elif node.keys[i] > key and self.sorted:
-                return
+                return  # Stop further exploration if sorted
         if not node.is_leaf:
-            self._search_all_matches(node.children[-1], key, results)
+            if key >= node.keys[-1] or not self.sorted:
+                self._search_all_matches(node.children[-1], key, results)
 
     def range_search(self, key_min, key_max):
         self.reset_visit_counts()
@@ -123,17 +126,19 @@ class BTree:
 
     def _range_search(self, node, key_min, key_max, results):
         node.visits += 1
-        for i in range(len(node.keys)):  #iterate through keys
+        for i in range(len(node.keys)):
             if not node.is_leaf:
-                self._range_search(node.children[i], key_min, key_max, results)
+                if key_min <= node.keys[i] or not self.sorted:
+                    self._range_search(node.children[i], key_min, key_max, results)
             node.comparisons += 1
             if key_min <= node.keys[i] <= key_max:
                 results.append(node.record[i])
             elif node.keys[i] > key_max and self.sorted:
-                return
+                return  # stop search
         if not node.is_leaf:
-            self._range_search(node.children[-1], key_min, key_max, results)
-            
+            if key_max >= node.keys[-1] or not self.sorted:
+                self._range_search(node.children[-1], key_min, key_max, results)
+    
     def search_starting_with(self, start):
         self.reset_visit_counts()
         results = []
