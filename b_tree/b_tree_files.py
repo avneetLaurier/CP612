@@ -149,12 +149,13 @@ class BTree:
         node.visits += 1
         for i in range(len(node.keys)):
             if not node.is_leaf:
-                self._search_starting_with(node.children[i], start, results)
+                if not self.sorted or node.keys[i] >= start:
+                    self._search_starting_with(node.children[i], start, results)
             node.comparisons += 1
             if node.keys[i].startswith(start):
                 results.append(node.record[i])
             elif node.keys[i] > start and self.sorted:
-                return
+                return  # stop here!
         if not node.is_leaf:
             self._search_starting_with(node.children[-1], start, results)
             
@@ -168,26 +169,29 @@ class BTree:
         self._search_composite(self.root, search_key, mode, results)
         return results
 
-
     def _search_composite(self, node, search_key, mode, results):
         node.visits += 1
         for i in range(len(node.keys)):
             if not node.is_leaf:
-                self._search_composite(node.children[i], search_key, mode, results)
+                if not self.sorted: self._search_composite(node.children[i], search_key, mode, results)
+                else:
+                    key = node.keys[i]
+                    key_prefix = key.split(' - ', 1)[0] if mode in (0, 2) else key.split(' - ', 1)[-1]
+                    if key_prefix >= search_key:  self._search_composite(node.children[i], search_key, mode, results)
             node.comparisons += 1
             key = node.keys[i]
-            if mode in (0, 2):  # Modes 0 and 2: stop if first part exceeds search_key
+            if mode == 2 and key == search_key: results.append(node.record[i])
+            elif mode == 0:
                 first_part = key.split(' - ', 1)[0]
-                if (mode == 2 and key == search_key) or (mode == 0 and first_part == search_key):
-                    results.append(node.record[i])
+                if first_part == search_key: results.append(node.record[i])
                 elif first_part > search_key and self.sorted:
                     return
-            else:
+            elif mode == 1:
                 parts = key.split(' - ', 1)
-                if len(parts) > 1 and parts[1] == search_key:
-                    results.append(node.record[i])
+                if len(parts) > 1 and parts[1] == search_key: results.append(node.record[i])
+ 
                     ## this ended up being more complicated that i thought.
-
+                    # did not use
         if not node.is_leaf:
             self._search_composite(node.children[-1], search_key, mode, results)
 
